@@ -12,174 +12,190 @@ from main.models import Categorias, Despesas, Receitas
 
 from datetime import date
 
-#------------------------------ CADASTRO -------------------------------
+# ------------------------------ CADASTRO -------------------------------
+
 
 def cadastro(request):
-    if request.method == 'GET':
-        return render(request, 'cadastro.html')
+    if request.method == "GET":
+        return render(request, "cadastro.html")
     else:
-        first_name = request.POST.get('name')
-        email = request.POST.get('email')
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        
-        user = User.objects.filter(username=username).first()
-        
-        if user:
-            return redirect('login')
-        
-        user = User.objects.create_user(first_name=first_name, email=email,username=username, password=password)
-        user.save()
-        
-        return HttpResponse('usuario cadastrado com sucesso')
+        first_name = request.POST.get("name")
+        email = request.POST.get("email")
+        username = request.POST.get("username")
+        password = request.POST.get("password")
 
-#------------------------------ LOGIN -------------------------------
+        user = User.objects.filter(username=username).first()
+
+        if user:
+            return redirect("login")
+
+        user = User.objects.create_user(
+            first_name=first_name, email=email, username=username, password=password
+        )
+        user.save()
+
+        return HttpResponse("usuario cadastrado com sucesso")
+
+
+# ------------------------------ LOGIN -------------------------------
+
 
 def login(request):
-    if request.method == 'GET':
-        return render(request, 'login.html')
+    if request.method == "GET":
+        return render(request, "login.html")
     else:
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
         user = authenticate(username=username, password=password)
-        
+
         if user:
             login_django(request, user)
-            return redirect('home')
+            return redirect("home")
         else:
-            return redirect('login')       
+            return redirect("login")
 
-#------------------------------ HOME -------------------------------
 
-@login_required(login_url='ifinance/login/')
+# ------------------------------ HOME -------------------------------
+
+
+@login_required(login_url="ifinance/login/")
 def home(request):
-    categorias = Categorias.objects.filter( user = request.user)
-    
-    despesas = Despesas.objects.filter( user = request.user )
-    receitas = Receitas.objects.filter( user = request.user )
+    categorias = Categorias.objects.filter(user=request.user)
+
+    despesas = Despesas.objects.filter(user=request.user)
+    receitas = Receitas.objects.filter(user=request.user)
     totalReceita = 0
     totalDespesa = 0
 
-    
     for receita in receitas:
         totalReceita += receita.valor
     for despesa in despesas:
         totalDespesa += despesa.valor
-    
+
     context = {
-        'categorias': categorias,
-        'totalReceita': totalReceita,
-        'totalDespesa': totalDespesa,
-        'totalSaldo': totalReceita - totalDespesa
+        "categorias": categorias,
+        "totalReceita": totalReceita,
+        "totalDespesa": totalDespesa,
+        "totalSaldo": totalReceita - totalDespesa,
     }
-    
-    return render(request, 'dashboard.html', context)
+
+    return render(request, "dashboard.html", context)
 
 
-#------------------------------ CATEGORIA ------------------------------
-#-----------------------------------------------------------------------
+# ------------------------------ CATEGORIA ------------------------------
+# -----------------------------------------------------------------------
+
 
 @login_required()
 def create_category(request):
-    name = request.POST.get('name')
-    Categorias.objects.create(name = name, user = request.user)
+    name = request.POST.get("name")
+    Categorias.objects.create(name=name, user=request.user)
 
-    return redirect('home')
+    return redirect("home")
+
 
 @login_required()
 def delete_categoria(request, id):
-    categoria = Categorias.objects.filter(id = id).first()
+    categoria = Categorias.objects.filter(id=id).first()
     categoria.delete()
-    
-    return redirect('home')
+
+    return redirect("home")
 
 
-#------------------------------- RECEITA --------------------------------
-#------------------------------------------------------------------------
+# ------------------------------- RECEITA --------------------------------
+# ------------------------------------------------------------------------
+
 
 @login_required()
 def create_receita(request):
-    nome = request.POST.get('nome')
-    valor = request.POST.get('valor')
-    idCategoria = request.POST.get('categoria')
-    categoria = Categorias.objects.filter( id = idCategoria ).first()
+    nome = request.POST.get("nome")
+    valor = request.POST.get("valor")
+    idCategoria = request.POST.get("categoria")
+    categoria = Categorias.objects.filter(id=idCategoria).first()
     data = date.today()
-    
-    Receitas.objects.create(nome = nome, valor = valor, categoria = categoria, data = data, user = request.user)
-    
-    return redirect('receita')
+
+    Receitas.objects.create(
+        nome=nome, valor=valor, categoria=categoria, data=data, user=request.user
+    )
+
+    return redirect("receita")
+
 
 @login_required()
 def receita(request):
-    
+
     categorias = Categorias.objects.filter(user=request.user)
-    receitas = Receitas.objects.filter(user = request.user)
+    receitas = Receitas.objects.filter(user=request.user)
 
     paginator = Paginator(receitas, 7)
-    
-    page_number = request.GET.get('page')
+
+    page_number = request.GET.get("page")
     page_receitas = paginator.get_page(page_number)
-    
-    context = {
-        'receitas': page_receitas,
-        'categorias': categorias
-    }
-    
-    return render(request, 'tables.html', context)
+
+    context = {"receitas": page_receitas, "categorias": categorias}
+
+    return render(request, "tables.html", context)
+
 
 @login_required
 def delete_receita(request, id):
-    receita = Receitas.objects.filter(id = id).first()
+    receita = Receitas.objects.filter(id=id).first()
     receita.delete()
-    
-    return redirect('receita')
+
+    return redirect("receita")
 
 
-#------------------------------- DESPESA --------------------------------
-#------------------------------------------------------------------------
+# ------------------------------- DESPESA --------------------------------
+# ------------------------------------------------------------------------
+
 
 @login_required()
 def create_despesa(request):
-    nome = request.POST.get('nome')
-    valor = request.POST.get('valor')
-    idCategoria = request.POST.get('categoria')
-    categoria = Categorias.objects.filter( id = idCategoria ).first()
+    nome = request.POST.get("nome")
+    valor = request.POST.get("valor")
+    idCategoria = request.POST.get("categoria")
+    categoria = Categorias.objects.filter(id=idCategoria).first()
     data = date.today()
-    
-    Despesas.objects.create(nome = nome, valor = valor, categoria = categoria, data = data, user = request.user)
-    
-    return redirect('despesa')
+
+    Despesas.objects.create(
+        nome=nome, valor=valor, categoria=categoria, data=data, user=request.user
+    )
+
+    return redirect("despesa")
+
 
 @login_required()
 def despesa(request):
     categorias = Categorias.objects.filter(user=request.user)
-    despesas = Despesas.objects.filter(user = request.user)
+    despesas = Despesas.objects.filter(user=request.user)
 
     paginator = Paginator(despesas, 7)
-    
-    page_number = request.GET.get('page')
+
+    page_number = request.GET.get("page")
     page_despesas = paginator.get_page(page_number)
-    
+
     context = {
-        'despesas': page_despesas,
-        'categorias': categorias,
+        "despesas": page_despesas,
+        "categorias": categorias,
     }
-    
-    return render(request, 'wallet.html', context)
+
+    return render(request, "wallet.html", context)
+
 
 @login_required()
 def delete_despesa(request, id):
-    despesa = Despesas.objects.filter(id = id).first()
+    despesa = Despesas.objects.filter(id=id).first()
     despesa.delete()
-    
-    return redirect('despesa')
+
+    return redirect("despesa")
 
 
-#------------------------------- LOGOUT ---------------------------------
-#------------------------------------------------------------------------
+# ------------------------------- LOGOUT ---------------------------------
+# ------------------------------------------------------------------------
+
 
 @login_required()
 def logout(request):
     logout_django(request)
-    return redirect('login')
+    return redirect("login")
