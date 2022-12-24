@@ -128,12 +128,7 @@ def receita(request):
     categorias = Categorias.objects.filter(user=request.user)
     receitas = Receitas.objects.filter(user=request.user)
 
-    paginator = Paginator(receitas, 7)
-
-    page_number = request.GET.get("page")
-    page_receitas = paginator.get_page(page_number)
-
-    context = {"receitas": page_receitas, "categorias": categorias}
+    context = {"receitas": receitas, "categorias": categorias}
 
     return render(request, "tables.html", context)
 
@@ -170,13 +165,8 @@ def despesa(request):
     categorias = Categorias.objects.filter(user=request.user)
     despesas = Despesas.objects.filter(user=request.user)
 
-    paginator = Paginator(despesas, 7)
-
-    page_number = request.GET.get("page")
-    page_despesas = paginator.get_page(page_number)
-
     context = {
-        "despesas": page_despesas,
+        "despesas": despesas,
         "categorias": categorias,
     }
 
